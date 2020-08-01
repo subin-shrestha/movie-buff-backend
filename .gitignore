@@ -1,6 +1,17 @@
-venv/
 __pycache__
 *.pyc
 
+# Django stuff:
 db.sqlite3
 local_settings.py
+
+# Unit test / coverage reports
+htmlcov/
+.coverage
+.coverage.*
+
+# Environments
+.env
+.venv
+env/
+venv/
