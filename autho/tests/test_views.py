@@ -2,9 +2,62 @@ from unittest.mock import patch
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APITestCase
+from rest_framework.response import Response
 
 from autho.models import User
+from autho.views import ResponseMixin
 from .receipes import create_user
+
+
+class TestResponseMixin(TestCase):
+	def setUp(self):
+		self.instance = ResponseMixin()
+
+	def test_success_instance(self):
+		response = self.instance.api_success_response({})
+		self.assertIsInstance(response, Response)
+
+	def test_default_success(self):
+		response = self.instance.api_success_response({})
+
+		self.assertDictEqual(response.data, {})
+		self.assertEqual(response.status_code, 200)
+
+	def test_success_data(self):
+		data = {'detail': "Success"}
+		response = self.instance.api_success_response(data)
+
+		self.assertDictEqual(response.data, data)
+		self.assertEqual(response.status_code, 200)
+
+	def test_success_status(self):
+		data = {'detail': "Success"}
+		response = self.instance.api_success_response(data, status=201)
+
+		self.assertDictEqual(response.data, data)
+		self.assertEqual(response.status_code, 201)
+
+
+	def test_default_error(self):
+		response = self.instance.api_error_response({})
+
+		self.assertDictEqual(response.data, {})
+		self.assertEqual(response.status_code, 400)
+
+	def test_error_data(self):
+		data = {'detail': "Error"}
+		response = self.instance.api_error_response(data)
+
+		self.assertDictEqual(response.data, data)
+		self.assertEqual(response.status_code, 400)
+
+	def test_error_status(self):
+		data = {'detail': "Error"}
+		response = self.instance.api_error_response(data, status=403)
+
+		self.assertDictEqual(response.data, data)
+		self.assertEqual(response.status_code, 403)
+
 
 
 class TestSignup(APITestCase):

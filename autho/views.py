@@ -11,41 +11,46 @@ from autho.helpers import get_random_string
 from autho.exceptions import CustomException
 
 
-class UserAPI(GenericViewSet):
-    @action(methods=["POST"], detail=False)
-    def signup(self, request, *args, **kwargs):
-        """ Signup a users."""
+class ResponseMixin:
+	def api_success_response(self, data, status=status.HTTP_200_OK):
+		return Response(data, status)
 
-        serializer = SignupSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+	def api_error_response(self, data, status=status.HTTP_400_BAD_REQUEST):
+		return Response(data, status)
 
-        data = serializer.data
-        data['code'] = get_random_string()
-        user = User.objects.create_user(**data)
-        user.send_email("Account OTP", f"Kindly use code {user.code} for completing signup.")
-        response = {'detail': "Please verify your OTP code."}
-        return Response(response, status=status.HTTP_201_CREATED)
 
-    @action(methods=["POST"], detail=False)
-    def verify_otp(self, request, *args, **kwargs):
-        """ Verify OTP code."""
+class UserAPI(ResponseMixin, GenericViewSet):
+	@action(methods=["POST"], detail=False)
+	def signup(self, request, *args, **kwargs):
+		""" Signup a users."""
 
-        serializer = VerifyOtpSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['code']
-        try:
-            user.verify()
-        except CustomException as exp:
-            return Response(
-                {'detail': exp.message, 'error_key': exp.error_key},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+		serializer = SignupSerializer(data=request.data)
+		serializer.is_valid(raise_exception=True)
 
-        login(request, user)
-        token, _ = Token.objects.get_or_create(user=user)
+		data = serializer.data
+		data['code'] = get_random_string()
+		user = User.objects.create_user(**data)
+		user.send_email("Account OTP", f"Kindly use code {user.code} for completing signup.")
+		data = {'detail': "Please verify your OTP code."}
+		return self.api_success_response(data, status=status.HTTP_201_CREATED)
 
-        response = {
-            'detail': "User's OTP has been verified.",
-            'token': token.key
-        }
-        return Response(response, status=status.HTTP_200_OK)
+	@action(methods=["POST"], detail=False)
+	def verify_otp(self, request, *args, **kwargs):
+		""" Verify OTP code."""
+
+		serializer = VerifyOtpSerializer(data=request.data)
+		serializer.is_valid(raise_exception=True)
+		user = serializer.validated_data['code']
+		try:
+			user.verify()
+		except CustomException as exp:
+			return self.api_error_response({'detail': exp.message, 'error_key': exp.error_key})
+
+		login(request, user)
+		token, _ = Token.objects.get_or_create(user=user)
+
+		data = {
+			'detail': "User's OTP has been verified.",
+			'token': token.key
+		}
+		return self.api_success_response(data)
