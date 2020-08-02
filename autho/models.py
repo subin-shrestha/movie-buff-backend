@@ -7,7 +7,7 @@ from autho.helpers import get_random_string
 
 
 class User(AbstractUser):
-	code = models.CharField(max_length=6)
+	code = models.CharField(max_length=6, unique=True)
 	is_verified = models.BooleanField(default=False)
 
 	def __str__(self):
