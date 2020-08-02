@@ -1,5 +1,6 @@
 from django.contrib.auth import login, logout, authenticate
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
@@ -79,3 +80,14 @@ class UserAPI(ResponseMixin, GenericViewSet):
 			'token': token.key
 		}
 		return self.api_success_response(data)
+
+	@action(methods=["POST"], detail=False, permission_classes=[IsAuthenticated])
+	def logout(self, request, *args, **kwargs):
+		""" Logout current logged in user. """
+
+		token = getattr(request.user, 'auth_token', None)
+		if token:
+			token.delete()	# Delete user token
+		logout(request)	# User log out
+
+		return self.api_success_response({"detail": "User has been logged out."})

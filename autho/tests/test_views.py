@@ -3,6 +3,7 @@ from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APITestCase
 from rest_framework.response import Response
+from rest_framework.authtoken.models import Token
 
 from autho.models import User
 from autho.views import ResponseMixin
@@ -135,3 +136,40 @@ class TestLogin(APITestCase):
 		self.assertEqual(response.status_code, 200)
 		self.assertEqual(json_response.get('detail'), "User has been logged in.")
 		self.assertIsNotNone(json_response.get('token'))
+
+
+class TestLogout(APITestCase):
+	@classmethod
+	def setUpTestData(cls):
+		cls.url = reverse('user-logout')
+
+	def test_annoymous_user(self):
+		self.client.force_authenticate(None)
+		response = self.client.post(self.url)
+		json_response = response.json()
+
+		self.assertEqual(response.status_code, 401)
+		self.assertEqual(json_response.get('detail'), "Authentication credentials were not provided.")
+
+	def test_user(self):
+		user = create_user()
+		token = Token.objects.create(user=user)
+		self.client.force_authenticate(user)
+
+		response = self.client.post(self.url)
+		json_response = response.json()
+
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(Token.objects.count(), 0)
+		self.assertEqual(json_response.get('detail'), "User has been logged out.")
+
+	def test_no_token(self):
+		user = create_user()
+		self.client.force_authenticate(user)
+
+		response = self.client.post(self.url)
+		json_response = response.json()
+
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(Token.objects.count(), 0)
+		self.assertEqual(json_response.get('detail'), "User has been logged out.")
