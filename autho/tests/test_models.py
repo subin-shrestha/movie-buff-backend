@@ -56,3 +56,11 @@ class TestUser(TestCase):
 		send_email.assert_called_once()
 
 
+
+	def test_get_basic_info(self):
+		user = create_user(idx="randomtext", username="randomusername")
+
+		data = user.get_basic_info()
+		self.assertIsInstance(data, dict)
+		self.assertEqual(data['idx'], "randomtext")
+		self.assertEqual(data['username'], "randomusername")

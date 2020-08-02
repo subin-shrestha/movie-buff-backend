@@ -5,6 +5,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.template.loader import render_to_string
 
+from shortuuidfield import ShortUUIDField
 from helpers.utils import get_random_string
 from helpers.exceptions import UserAlreadyVerified
 
@@ -12,11 +13,18 @@ TEMPLATE_DIR = os.path.join(settings.BASE_DIR, 'autho/templates')
 
 
 class User(AbstractUser):
+	idx = ShortUUIDField(unique=True)
 	code = models.CharField(max_length=6, unique=True, null=True, blank=True)
 	is_verified = models.BooleanField(default=False)
 
 	def __str__(self):
 		return self.username
+
+	def get_basic_info(self):
+		return {
+			'idx': self.idx,
+			'username': self.username
+		}
 
 	def send_email(self, subject, message, from_email=None, **kwargs):
 		"""Send an email to this user."""
