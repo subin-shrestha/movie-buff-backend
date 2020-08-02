@@ -3,7 +3,7 @@ from django.test import TestCase
 from django.conf import settings
 from django.core import mail
 
-from autho.exceptions import UserAlreadyVerified
+from helpers.exceptions import UserAlreadyVerified
 from .receipes import create_user
 
 

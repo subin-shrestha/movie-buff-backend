@@ -9,7 +9,7 @@ from rest_framework.authtoken.models import Token
 from autho.models import User
 from autho.serializers import SignupSerializer, VerifyOtpSerializer, LoginSerializer
 from autho.helpers import get_random_string
-from autho.exceptions import CustomException
+from helpers.exceptions import CustomException
 
 
 class ResponseMixin:
