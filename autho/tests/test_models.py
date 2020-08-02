@@ -1,7 +1,9 @@
+from unittest.mock import patch
 from django.test import TestCase
 from django.conf import settings
 from django.core import mail
 
+from autho.exceptions import UserAlreadyVerified
 from .receipes import create_user
 
 
@@ -33,3 +35,24 @@ class TestUser(TestCase):
 		self.assertEqual(mail.outbox[0].from_email, "sender@info.com")
 		self.assertEqual(mail.outbox[0].to, ["user@info.com"])
 		self.assertEqual(mail.outbox[0].body, "Test message")
+
+
+	def test_verify_exception(self):
+		user = create_user(is_verified=True)
+		with self.assertRaises(UserAlreadyVerified):
+			user.verify()
+
+	@patch('autho.models.User.send_email')
+	def test_verify(self, send_email):
+		user = create_user(is_verified=False)
+		user.set_password('obsolete')
+		user.verify("title", "message")
+		user.refresh_from_db()
+
+		self.assertTrue(user.is_verified, "Should be True!")
+		self.assertIsNone(user.code, "Should be None!")
+		self.assertFalse(user.check_password('obsolete'))
+
+		send_email.assert_called_once()
+
+
