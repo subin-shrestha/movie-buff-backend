@@ -143,5 +143,7 @@ EMAIL_PORT = ''
 ## Admin Email
 ADMIN_EMAIL = ""
 
-
-from .local_settings import *
+try:
+    from .local_settings import *
+except ImportError:
+    pass
