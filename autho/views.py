@@ -8,6 +8,7 @@ from rest_framework.authtoken.models import Token
 from autho.models import User
 from autho.serializers import SignupSerializer, VerifyOtpSerializer
 from autho.helpers import get_random_string
+from autho.exceptions import CustomException
 
 
 class UserAPI(GenericViewSet):
@@ -31,11 +32,14 @@ class UserAPI(GenericViewSet):
 
         serializer = VerifyOtpSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         user = serializer.validated_data['code']
-        user.is_verified =True
-        user.code = None
-        user.save()
+        try:
+            user.verify()
+        except CustomException as exp:
+            return Response(
+                {'detail': exp.message, 'error_key': exp.error_key},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         login(request, user)
         token, _ = Token.objects.get_or_create(user=user)
@@ -45,4 +49,3 @@ class UserAPI(GenericViewSet):
             'token': token.key
         }
         return Response(response, status=status.HTTP_200_OK)
-
