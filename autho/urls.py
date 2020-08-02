@@ -1,8 +1,12 @@
 from django.urls import re_path as url
+from rest_framework.routers import SimpleRouter
 
 from autho import views
 
 
-urlpatterns = [
-    url('api/signup', views.Signup, name="signup")
-]
+router = SimpleRouter()
+
+router.register(r'api/user', views.UserAPI, basename="user")
+
+urlpatterns = router.urls
+

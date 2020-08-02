@@ -11,7 +11,7 @@ from .receipes import create_user
 class TestSignup(APITestCase):
 	@classmethod
 	def setUpTestData(cls):
-		cls.url = reverse('signup')
+		cls.url = reverse('user-signup')
 
 	@patch('autho.models.User.send_email')
 	def test_success(self, send_email):
