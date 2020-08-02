@@ -1,4 +1,4 @@
-from django.contrib.auth import login, logout
+from django.contrib.auth import login, logout, authenticate
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -6,7 +6,7 @@ from rest_framework.viewsets import GenericViewSet
 from rest_framework.authtoken.models import Token
 
 from autho.models import User
-from autho.serializers import SignupSerializer, VerifyOtpSerializer
+from autho.serializers import SignupSerializer, VerifyOtpSerializer, LoginSerializer
 from autho.helpers import get_random_string
 from autho.exceptions import CustomException
 
@@ -51,6 +51,31 @@ class UserAPI(ResponseMixin, GenericViewSet):
 
 		data = {
 			'detail': "User's OTP has been verified.",
+			'token': token.key
+		}
+		return self.api_success_response(data)
+
+
+	@action(methods=["POST"], detail=False)
+	def login(self, request, *args, **kwargs):
+		""" User login with credentials."""
+
+		serializer = LoginSerializer(data=request.data)
+		serializer.is_valid(raise_exception=True)
+
+		credentials = serializer.validated_data
+		user = authenticate(request, **credentials)
+
+		if user is None:
+			return self.api_error_response({'detail': "User credential does not match."})
+		elif user.is_verified is False:
+			return self.api_error_response({'detail': "User has not verified yet."})
+
+		login(request, user)
+		token, _ = Token.objects.get_or_create(user=user)
+
+		data = {
+			'detail': "User has been logged in.",
 			'token': token.key
 		}
 		return self.api_success_response(data)

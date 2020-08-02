@@ -23,3 +23,7 @@ class VerifyOtpSerializer(serializers.Serializer):
             raise serializers.ValidationError("OTP code does not match.")
 
         return user
+
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField()

@@ -103,3 +103,35 @@ class TestVerifyOTP(APITestCase):
 		self.assertTrue(user.is_authenticated)
 		self.assertIsNotNone(user.auth_token)
 
+
+class TestLogin(APITestCase):
+	@classmethod
+	def setUpTestData(cls):
+		cls.url = reverse('user-login')
+		cls.credentials = {'username': 'test', 'password': "secret"}
+
+	def test_invalid_user(self):
+		response = self.client.post(self.url, data=self.credentials)
+		json_response = response.json()
+
+		self.assertEqual(response.status_code, 400)
+		self.assertEqual(json_response.get('detail'), "User credential does not match.")
+		self.assertIsNone(json_response.get('token'))
+
+	def test_unverified_user(self):
+		create_user(is_verified=False, **self.credentials)
+		response = self.client.post(self.url, data=self.credentials)
+		json_response = response.json()
+
+		self.assertEqual(response.status_code, 400)
+		self.assertEqual(json_response.get('detail'), "User has not verified yet.")
+		self.assertIsNone(json_response.get('token'))
+
+	def test_verified_user(self):
+		user =create_user(is_verified=True, **self.credentials)
+		response = self.client.post(self.url, data=self.credentials)
+		json_response = response.json()
+
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(json_response.get('detail'), "User has been logged in.")
+		self.assertIsNotNone(json_response.get('token'))

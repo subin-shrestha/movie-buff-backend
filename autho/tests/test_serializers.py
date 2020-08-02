@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.test.client import RequestFactory
 
-from autho.serializers import SignupSerializer, VerifyOtpSerializer
+from autho.serializers import SignupSerializer, VerifyOtpSerializer, LoginSerializer
 from .receipes import create_user
 
 
@@ -67,3 +67,25 @@ class TestVerifyOtpSerializer(TestCase):
 
 		self.assertTrue(is_valid, "Should return True")
 		self.assertDictEqual(serializer.validated_data, {'code': user})
+
+
+class TestLoginSerializer(TestCase):
+
+	def test_required_fields(self):
+		serializer = LoginSerializer(data={})
+		is_valid = serializer.is_valid()
+		errors = serializer.errors
+
+		self.assertFalse(is_valid, "Should return False")
+		self.assertIsNotNone(errors.get('username'), "Username is required field!")
+		self.assertEqual(str(errors['username'][0]), "This field is required.")
+		self.assertIsNotNone(errors.get('password'), "Password is required field!")
+		self.assertEqual(str(errors['password'][0]), "This field is required.")
+
+	def test_valid_data(self):
+		data = {'username': 'test', 'password': 'test'}
+		serializer = LoginSerializer(data=data)
+		is_valid = serializer.is_valid()
+
+		self.assertTrue(is_valid, "Should return True")
+		self.assertDictEqual(serializer.validated_data, data)
