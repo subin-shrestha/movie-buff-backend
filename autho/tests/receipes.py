@@ -1,9 +1,13 @@
 from model_mommy.recipe import Recipe
 
 
-USER = Recipe("autho.User")
-
 def create_user(**kwargs):
 	defaults = {}
+	password = kwargs.get('password')
 	defaults.update(**kwargs)
-	return USER.make(**defaults)
+	user = Recipe("autho.User").make(**defaults)
+	if password:
+		user.set_password(password)
+		user.save()
+
+	return user
