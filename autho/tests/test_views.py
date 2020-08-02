@@ -1,7 +1,6 @@
 from unittest.mock import patch
 from django.test import TestCase
 from django.urls import reverse
-from rest_framework import status
 from rest_framework.test import APITestCase
 
 from autho.models import User
@@ -19,7 +18,7 @@ class TestSignup(APITestCase):
 		response = self.client.post(self.url, data=data)
 		json_response = response.json()
 
-		self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+		self.assertEqual(response.status_code, 201)
 		self.assertEqual(json_response.get('detail'), "Please verify your OTP code.")
 		self.assertEqual(User.objects.count(), 1)
 
@@ -29,4 +28,25 @@ class TestSignup(APITestCase):
 
 		send_email.assert_called_once()
 		send_email.assert_called_with("Account OTP", f"Kindly use code {user.code} for completing signup.")
+
+
+class TestVerifyOTP(APITestCase):
+	@classmethod
+	def setUpTestData(cls):
+		cls.url = reverse('user-verify-otp')
+
+	def test_success(self):
+		user = create_user(code="ORANGE")
+		response = self.client.post(self.url, data={'code': "ORANGE"})
+		json_response = response.json()
+
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(json_response.get('detail'), "User's OTP has been verified.")
+		self.assertIsNotNone(json_response.get('token'),"Token should not be none.")
+
+		user.refresh_from_db()
+		self.assertTrue(user.is_verified)
+		self.assertIsNone(user.code)
+		self.assertTrue(user.is_authenticated)
+		self.assertIsNotNone(user.auth_token)
 
