@@ -5,7 +5,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.template.loader import render_to_string
 
-from autho.helpers import get_random_string
+from helpers.utils import get_random_string
 from helpers.exceptions import UserAlreadyVerified
 
 TEMPLATE_DIR = os.path.join(settings.BASE_DIR, 'autho/templates')
