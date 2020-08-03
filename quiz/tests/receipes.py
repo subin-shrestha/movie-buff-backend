@@ -12,3 +12,6 @@ def create_question(**kwargs):
 def create_choice(**kwargs):
 	return Recipe("quiz.Choice").make(**kwargs)
 
+
+def create_user_aggregate(**kwargs):
+	return Recipe("quiz.UserAggregate").make(**kwargs)
